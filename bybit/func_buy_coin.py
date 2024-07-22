@@ -7,7 +7,8 @@ def buy_coin_with_stop_loss(symbol, side):
     for account in Trader.objects.all():
         session = HTTP(
             api_key=account.api_key,
-            api_secret=account.api_secret)
+            api_secret=account.api_secret,
+            demo=settings.demo)
 
         try:
             # Set leverage
@@ -57,12 +58,13 @@ def buy_coin_with_stop_loss(symbol, side):
 
 
 def close_part_position(symbol, target_num):
+    settings = Settings.objects.last()
     for user in Trader.objects.all():
         session = HTTP(
             api_key=user.api_key,
-            api_secret=user.api_secret)
+            api_secret=user.api_secret,
+            demo=settings.demo)
 
-        # Get current position
         positions = session.get_positions(category="linear", symbol=symbol)
         print(positions)
 
@@ -70,7 +72,7 @@ def close_part_position(symbol, target_num):
 
         if target_num != 4:
             # stop_loss = price * (1 + target * percent)
-            stop_loss = entry_price.price * (1 + (target_num - 1) * Settings.objects.last().stop_loss_step / 100)
+            stop_loss = entry_price.price * (1 + (target_num - 1) * settings.stop_loss_step / 100)
 
             session.set_trading_stop(
                 category='linear',
@@ -83,7 +85,6 @@ def close_part_position(symbol, target_num):
 
         position_qty = float(positions['result']['list'][0]['size'])
 
-        # Calculate quantity to close (50% of current position)
         close_qty = position_qty / (5 - target_num)
         close_qty = str(round(close_qty, 3))
 

@@ -16,6 +16,7 @@ class Settings(models.Model):
     leverage = models.FloatField()
     amount_usd = models.FloatField()
     stop_loss_step = models.FloatField()
+    demo = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Setting {self.id}"

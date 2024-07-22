@@ -29,12 +29,10 @@ def main():
             for chat in Chat.objects.all():
                 chats_list.append(str(chat.chat_id).replace('-', '')[3:])
 
-            print(str(event.message.peer_id.channel_id))
-            print(chats_list)
-
             print('New_message')
             try:
-                if str(event.message.peer_id.channel_id) in chats_list:
+                have_channel_id = getattr(event.message.peer_id, 'channel_id', False)
+                if have_channel_id and str(event.message.peer_id.channel_id) in chats_list:
                     print('1')
                     message = str(event.message.message)
 
