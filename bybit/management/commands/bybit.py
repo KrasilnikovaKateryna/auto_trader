@@ -42,7 +42,15 @@ def main():
 
                         # side = message.split("Signal: ")[1].split("\n")[0]
 
-                        buy_coin_with_stop_loss(symbol, "Buy")
+                        entry_targets = float(message.split("Entry Targets: ")[1].split("\n")[0])
+                        stop_target = float(message.split("Stop target: ")[1].split("\n")[0])
+
+                        if entry_targets > stop_target:
+                            side = "Buy"
+                        else:
+                            side = "Sell"
+
+                        buy_coin_with_stop_loss(symbol, side)
 
                     elif "target" in message and "Period" in message:
                         symbol = message.split("\n")[1].split("/USDT")[0]

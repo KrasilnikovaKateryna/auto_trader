@@ -31,7 +31,7 @@ def buy_coin_with_stop_loss(symbol, side):
 
         orders = [{
             'symbol': symbol,
-            'side': "Buy",
+            'side': side,
             'order_type': 'Market',
             'qty': qty,
             'time_in_force': "GTC"
@@ -41,19 +41,23 @@ def buy_coin_with_stop_loss(symbol, side):
         print(order)
 
         # Calculate stop loss price
-        stop_loss_price = market_price * (1 - settings.stop_loss_percent / 100)
+        if side == "Buy":
+            stop_loss_price = market_price * (1 - settings.stop_loss_percent / 100)
+        else:
+            stop_loss_price = market_price * (1 + settings.stop_loss_percent / 100)
 
         # Place stop loss order
         session.set_trading_stop(
             category='linear',
             symbol=symbol,
-            side="Buy",
+            side=side,
             stop_loss=str(stop_loss_price)
         )
 
         EntryPrice.objects.create(
             symbol=symbol,
-            price=market_price
+            entry_price=market_price,
+            side=side
         )
 
 
@@ -70,32 +74,49 @@ def close_part_position(symbol, target_num):
 
         entry_price = EntryPrice.objects.filter(symbol=symbol).last()
 
-        if target_num != 4:
-            # stop_loss = price * (1 + target * percent)
-            stop_loss = entry_price.price * (1 + (target_num - 1) * settings.stop_loss_step / 100)
-
-            session.set_trading_stop(
-                category='linear',
-                symbol=symbol,
-                side="Buy",
-                stop_loss=str(stop_loss)
-            )
-        else:
-            EntryPrice.objects.filter(symbol=symbol).last().delete()
-
         position_qty = float(positions['result']['list'][0]['size'])
 
-        close_qty = position_qty / (5 - target_num)
+        if target_num == 3:
+            close_qty = position_qty
+        else:
+            close_qty = position_qty / 2
+
         close_qty = str(round(close_qty, 3))
+
+        if entry_price.side == "Buy":
+            close_side = "Sell"
+        else:
+            close_side = "Buy"
 
         orders = [{
             'symbol': symbol,
-            'side': "Sell",
+            'side': close_side,
             'order_type': 'Market',
             'qty': close_qty,
             'time_in_force': "GTC"
         }]
 
         session.place_batch_order(category='linear', request=orders)
+        print(target_num)
+        print(type(target_num))
 
+        if target_num == 1:
+            stop_loss = entry_price.entry_price
 
+            market_data = session.get_tickers(category="linear", symbol=symbol)
+            market_price = float(market_data['result']['list'][0]['lastPrice'])
+
+            entry_price.entry_price = market_price
+            entry_price.save()
+        elif target_num == 2:
+            stop_loss = entry_price.first_target_price
+        else:
+            EntryPrice.objects.filter(symbol=symbol).last().delete()
+            return
+
+        session.set_trading_stop(
+            category='linear',
+            symbol=symbol,
+            side=entry_price.side,
+            stop_loss=str(stop_loss)
+        )

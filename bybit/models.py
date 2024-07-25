@@ -36,8 +36,10 @@ class Chat(models.Model):
 
 class EntryPrice(models.Model):
     symbol = models.CharField(max_length=20)
+    side = models.CharField(max_length=4)
+    entry_price = models.FloatField()
+    first_target_price = models.FloatField(default=0)
     timestamp = models.DateTimeField(auto_now_add=True)
-    price = models.FloatField()
 
 
 class ErrorLog(models.Model):
