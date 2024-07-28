@@ -106,7 +106,7 @@ def close_part_position(symbol, target_num):
             market_data = session.get_tickers(category="linear", symbol=symbol)
             market_price = float(market_data['result']['list'][0]['lastPrice'])
 
-            entry_price.entry_price = market_price
+            entry_price.first_target_price = market_price
             entry_price.save()
         elif target_num == 2:
             stop_loss = entry_price.first_target_price
