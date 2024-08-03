@@ -60,6 +60,12 @@ def main():
 
                         close_part_position(symbol, target_num)
 
+                    elif "Closed due to" in message or "Target achieved" in message:
+                        symbol = message.split("\n")[1].split("/USDT")[0]
+                        symbol = symbol[1:] + "USDT"
+
+                        close_part_position(symbol, 3)
+
             except AttributeError:
                 pass
         except Exception as e:

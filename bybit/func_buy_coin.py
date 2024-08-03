@@ -25,9 +25,15 @@ def buy_coin_with_stop_loss(symbol, side):
         market_data = session.get_tickers(category="linear", symbol=symbol)
         market_price = float(market_data['result']['list'][0]['lastPrice'])
 
+        # print(market_data['result']['list'])
+        precision = len(session.get_instruments_info(
+                category="linear",
+                symbol=symbol,
+                )['result']['list'][0]['lotSizeFilter']['qtyStep'].split('.')[1])
+
         # Calculate quantity to buy based on amount in USD
         qty = settings.amount_usd / market_price
-        qty = str(int(qty))
+        qty = str(round(qty, precision))
 
         orders = [{
             'symbol': symbol,
@@ -38,7 +44,6 @@ def buy_coin_with_stop_loss(symbol, side):
         }]
 
         order = session.place_batch_order(category='linear', request=orders)
-        print(order)
 
         # Calculate stop loss price
         if side == "Buy":
@@ -97,8 +102,6 @@ def close_part_position(symbol, target_num):
         }]
 
         session.place_batch_order(category='linear', request=orders)
-        print(target_num)
-        print(type(target_num))
 
         if target_num == 1:
             stop_loss = entry_price.entry_price
