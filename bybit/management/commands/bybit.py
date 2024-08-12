@@ -1,3 +1,5 @@
+import traceback
+
 from bybit.models import Chat, ErrorLog
 from bybit.func_buy_coin import buy_coin_with_stop_loss, close_part_position
 
@@ -69,7 +71,8 @@ def main():
             except AttributeError:
                 pass
         except Exception as e:
-            ErrorLog.objects.create(error=str(e))
+            error_message = "".join(traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__))
+            ErrorLog.objects.create(error=error_message)
     client.run_until_disconnected()
 
 
